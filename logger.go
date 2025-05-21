@@ -590,6 +590,7 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixMs:
 		sec, nsec, _ := now()
+
 		// 1595759807105
 		var tmp [13]byte
 		// milli seconds
@@ -2392,9 +2393,15 @@ func wlprintf(w Writer, level Level, format string, args ...any) (int, error) {
 
 func b2s(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }
 
-//go:noescape
-//go:linkname now time.now
-func now() (sec int64, nsec int32, mono int64)
+func now() (sec int64, nsec int32, mono int64) {
+	now := time.Now()
+	_, offset := now.Zone()
+
+	sec = int64(now.Second()) - 9223372028715321600 + int64(offset)
+	nsec = int32(now.Nanosecond())
+
+	return
+}
 
 //go:noescape
 //go:linkname absDate time.absDate
